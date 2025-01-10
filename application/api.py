@@ -1,13 +1,14 @@
+import os, sys
+import time
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
-
+from sensors.temperature import *
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fermentation.db' # Using SQLite for simplicity
 db = SQLAlchemy(app)
 api = Api(app)
-
 class Fermentation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=False, nullable=False)
@@ -19,7 +20,6 @@ class Fermentation(db.Model):
 
     def __repr__(self):
         return f'<Fermentation {self.name} from {self.startDate}>'
-
 fermentation_args = reqparse.RequestParser()
 fermentation_args.add_argument('name', type=str, help='Name of the fermentation', required=True)
 fermentation_args.add_argument('temperature', type=float, help='Requested temperature of the fermentation', required=True)
@@ -50,10 +50,7 @@ class FermentationsResource(Resource):
         db.session.commit()
         return fermentation, 201
     
-    
 class FermentationResource(Resource):
-
-    
     @marshal_with(fermentationFields)
     def get(self, fermentation_id):
         fermentation = Fermentation.query.get(fermentation_id)
@@ -87,6 +84,50 @@ api.add_resource(FermentationsResource, '/api/fermentation/')
 @app.route('/')
 def home():
     return "Welcome to the Home Page!"
+temperatureSensor = TemperatureSensor(4)
+@app.route("/metrics")
+def metrics():
+    metrics = temperatureSensor.read()
+    result = [metric.to_prometheus() for metric in metrics]
+    return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
+
+
+
+#rules
+class Rule():
+    def __init__(self, name, validation, triggerFunction):
+        self.name = name
+        self.validation = validation
+        self.triggerFunction = triggerFunction
+
+rules = []
+def addRule(rule):
+    rules.append(rule)
+
+def turnOnHydratingHeater():
+    print("Turning on Waterheater")
+def turnOnLampHeater():
+    print("Turning on Lamp heater")
+def turnOnDehydrator():
+    print("Turning on Dehydrator")
+
+def hydrateValidation():
+    if temperatureSensor.humidity < 1:
+        return True
+    return False
+
+addRule(Rule(hydrateValidation, turnOnHydratingHeater))
+
+
+print("Evaluating Rules")
+while True:
+    print("Evaluating Rules")
+    for rule in rules:
+        if rule.validation():
+            rule.triggerFunction()
+    time.sleep(5)
+
+
