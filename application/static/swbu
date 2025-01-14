@@ -1,0 +1,72 @@
+
+{
+    "openapi": "3.0.0",
+    "info": {
+      "description": "Fermentation API",
+      "version": "1.0.0",
+      "title": "Fermentation",
+      "license": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+      }
+    },
+    "servers": [
+        {
+        "url": "/"
+        }
+    ],
+
+    // 'id': fields.Integer,
+    // 'name': fields.String,
+    // 'temperature': fields.Float,
+    // 'duration': fields.Integer,
+    // 'startDate': fields.DateTime,
+    // 'endDate': fields.DateTime
+
+
+
+    "components": {
+        "schemas": {
+            "Fermentation": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                    "type": "string"
+                    },
+                    "temperature": {
+                    "type": "integer"
+                    },
+                    "humidity": {
+                    "type": "integer"
+                    },
+                    "duration": {
+                    "type": "integer"
+                    },
+                    "startDate": {
+                    "type": "string",
+                    "format": "date"
+                    },
+                    "endDate": {
+                    "type": "string",
+                    "format": "date"
+                    }
+                }
+            }
+        },
+            "update":{
+              "type": "object",
+              "properties" :{
+                "name": {
+                    "type": "string"
+                    },
+                  "description": {
+                    "type": "string"
+                  },
+                  "completed": {
+                    "type": "boolean"
+                  }
+              }
+            }
+        }
+    }
+}

@@ -1,12 +1,17 @@
 import os, sys
 import time
-from flask import Flask
+from flask import Flask, request, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
-from sensors.temperature import *
+from flask_swagger_ui import get_swaggerui_blueprint
+
+from sensors.temperature import TemperatureSensor
+from threading import Thread
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fermentation.db' # Using SQLite for simplicity
+
 db = SQLAlchemy(app)
 api = Api(app)
 class Fermentation(db.Model):
@@ -28,6 +33,7 @@ fermentationFields = {
     'id': fields.Integer,
     'name': fields.String,
     'temperature': fields.Float,
+    'humidity': fields.Integer,
     'duration': fields.Integer,
     'startDate': fields.DateTime,
     'endDate': fields.DateTime
@@ -91,43 +97,87 @@ def metrics():
     result = [metric.to_prometheus() for metric in metrics]
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
-
-
 
 #rules
 class Rule():
-    def __init__(self, name, validation, triggerFunction):
+    def __init__(self, name, validation, controlFunction):
         self.name = name
         self.validation = validation
-        self.triggerFunction = triggerFunction
+        self.controlFunction = controlFunction
 
 rules = []
 def addRule(rule):
     rules.append(rule)
 
-def turnOnHydratingHeater():
-    print("Turning on Waterheater")
-def turnOnLampHeater():
-    print("Turning on Lamp heater")
-def turnOnDehydrator():
-    print("Turning on Dehydrator")
+def controlHydratingHeater(validation):
+    if(validation()) :
+        print("Turning on Waterheater %.2f H" % temperatureSensor.humidity)
+    else:
+        print("Turning off Waterheater %.2f H" % temperatureSensor.humidity)
+def controlDehydrator(validation):
+    if(validation()) :
+        print("Turning on Dehydrator%.2f H" % temperatureSensor.humidity)
+    else:   
+        print("Turning off Dehydrator%.2f H" % temperatureSensor.humidity)
+def controlLampHeater(validation):
+    if(validation()) :
+        print("Turning on Lamp heater%.2f C" % temperatureSensor.temperature)
+    else:
+        print("Turning off Lamp heater%.2f C" % temperatureSensor.temperature)
+def controlFridge(validation):
+    if(validation()) :
+        print("Turning on Fridge%.2f C" % temperatureSensor.temperature)
+    else:
+        print("Turning off Fridge%.2f C" % temperatureSensor.temperature)
 
 def hydrateValidation():
-    if temperatureSensor.humidity < 1:
+    if temperatureSensor.read()[1].value < 40:
         return True
     return False
 
-addRule(Rule(hydrateValidation, turnOnHydratingHeater))
+def dehydrateValidation():
+    if temperatureSensor.read()[1].value > 60:
+        return True
+    return False
+
+def heatingValidation():
+    if temperatureSensor.read()[0].value < 15:
+        return True
+    return False
+
+def coolingValidation():
+    if temperatureSensor.read()[0].value > 25:
+        return True
+    return False
+
+addRule(Rule("hydrate", hydrateValidation, controlHydratingHeater))
+addRule(Rule("dehydrate", dehydrateValidation, controlDehydrator))
+addRule(Rule("heating", heatingValidation, controlLampHeater))
+addRule(Rule("cooling", coolingValidation, controlFridge))
+
+def ruleEvaluation():
+    while True:
+        print("Evaluating Rules")
+        for rule in rules:
+            rule.controlFunction(rule.validation)
+        time.sleep(5)
 
 
-print("Evaluating Rules")
-while True:
-    print("Evaluating Rules")
-    for rule in rules:
-        if rule.validation():
-            rule.triggerFunction()
-    time.sleep(5)
+#swagger configs
+swaggerUrl = '/swagger' # URL for the Swagger UI
+apiUrl = '/static/swagger.json' # URL for the API"
+swaggerBlueprint = get_swaggerui_blueprint(
+    swaggerUrl,
+    apiUrl,
+    config={
+        'app_name': "Fermentation API"
+    }
+)
 
+app.register_blueprint(swaggerBlueprint, url_prefix=swaggerUrl)
+
+if __name__ == '__main__':
+    thread = Thread(target = ruleEvaluation, args = ())
+    #thread.start()
+    app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
 

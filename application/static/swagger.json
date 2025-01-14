@@ -1,0 +1,182 @@
+
+{
+    "openapi": "3.0.0",
+    "info": {
+      "description": "Fermentation API",
+      "version": "1.0.0",
+      "title": "Fermentation API",
+      "license": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+      }
+    },
+    "servers": [
+        {
+        "url": "/api"
+        }
+    ],
+    "tags": [
+        {
+          "name": "Fermentation API",
+          "description": "Ferment API"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "Fermentation": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                    "type": "string"
+                    },
+                    "temperature": {
+                    "type": "integer"
+                    },
+                    "humidity": {
+                    "type": "integer"
+                    },
+                    "duration": {
+                    "type": "integer"
+                    },
+                    "startDate": {
+                    "type": "string",
+                    "format": "date"
+                    },
+                    "endDate": {
+                    "type": "string",
+                    "format": "date"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/fermentation": {
+            "get" :{
+                "tags": [
+                    "Get All ferments from API"
+                ],
+                "summary": "Get All ferments",
+            
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT FOUND",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Add Fermentation"
+                ],
+                "summary": "Add Fermentation",
+                "requestBody": {
+                    "description": "Post New Fermentation To Database",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Fermentation"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT FOUND",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    }
+                }
+            }
+        },
+        "/fermentation/{id}": {   
+            "get": {
+                "tags": [
+                    "Get Fermentation"
+                ],
+                "summary": "Get Fermentation",
+                "parameters": [{
+                    "name": "id",
+                    "in": "path",
+                    "description": "todo id to update",
+                    "required": true,
+                    "type": "integer",
+                    "schema" : {
+                        "$ref": "#/components/schemas/Id"
+                    }
+                  }],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT FOUND",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Update Fermentation"
+                ],
+                "summary": "update Fermentation",
+                "parameters": [{
+                    "name": "id",
+                    "in": "path",
+                    "description": "todo id to update",
+                    "required": true,
+                    "type": "integer",
+                    "schema" : {
+                        "$ref": "#/components/schemas/Id"
+                    }
+                  }],
+                "requestBody": {
+                    "description": "Update existing Fermentation To Database",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Fermentation"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT FOUND",
+                        "schema": {
+                        "$ref": "#/components/schemas/Fermentation"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
