@@ -1,13 +1,13 @@
 import os, sys
 import time
-from flask import Flask, request, make_response, jsonify
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
 from flask_swagger_ui import get_swaggerui_blueprint
 
 from sensors.temperature import TemperatureSensor
 from threading import Thread
-
+print("Things have been imported")
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fermentation.db' # Using SQLite for simplicity
@@ -160,7 +160,7 @@ def ruleEvaluation():
         print("Evaluating Rules")
         for rule in rules:
             rule.controlFunction(rule.validation)
-        time.sleep(5)
+        time.sleep(15)
 
 
 #swagger configs

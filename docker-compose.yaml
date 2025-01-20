@@ -1,12 +1,8 @@
-
-version: '3'
-
 services:
   pihome:
     image: pihome
     build: .
     restart: always
-    network_mode: host
     devices:
       - "/dev/mem:/dev/mem"
     privileged: true
@@ -14,12 +10,14 @@ services:
       - 5000:5000
     environment:
       - NETWORK_TO_SCAN=${NETWORK_TO_SCAN}
- 
+    volumes:
+    - app_data:/application
+    
   prometheus:
     image: prom/prometheus:v2.16.0
     user: root
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/etc/prometheus/
       - /var/prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -42,7 +40,34 @@ services:
     ports:
       - 80:3000
     volumes:
-      - ./grafana/:/etc/grafana
+      - grafana_config:/etc/grafana
+      - grafana_data:/var/lib/grafana
     restart: always
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+
+volumes:
+  app_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./application
+      o: bind  
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./prometheus
+      o: bind
+  grafana_config:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./grafana
+      o: bind
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./grafana_data
+      o: bind

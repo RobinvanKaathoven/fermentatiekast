@@ -1,4 +1,7 @@
 .venv
-instance
 Python.code-workspace
 .env
+swagger.json
+prometheus_data
+grafana_data
+app_data
