@@ -1,9 +1,13 @@
-FROM python:3.9-slim-buster
-
+FROM dtcooper/raspberrypi-os:bookworm
 WORKDIR /application
 
-RUN apt update && apt install -y nmap
-COPY ["./application/", "./"]
-RUN pip install -r requirements.txt
 
-CMD python api.py
+
+RUN set -xe \ 
+    && apt update \
+    && apt install -y nmap \
+    && apt install -y python3  python3-pip
+COPY ["./application/", "./"]
+RUN pip install -r requirements.txt --break-system-packages
+
+CMD python3 api.py

@@ -3,8 +3,10 @@ import time
 try:
         adafruit_dht = __import__("adafruit_dht")
         board = __import__("board")
+        print("AdaFruit DHT found")
 except:
         random = __import__("random")
+        print("No AdaFruit DHT found")
 
 class Metric:
     def __init__(self, name, value, labels={}):
@@ -19,7 +21,7 @@ class Metric:
 class TemperatureSensor:
     def __init__(self, data_pin):
         try:
-            self.dht_device = adafruit_dht.DHT22(board.D4)
+            self.dht_device = adafruit_dht.DHT22(board.D4, use_pulseio=False)
         except NameError as error:
             self.temperature = 20
             self.humidity = 50
@@ -28,6 +30,7 @@ class TemperatureSensor:
         try:
             self.temperature = self.dht_device.temperature
             self.humidity = self.dht_device.humidity
+            
             return [
                 Metric("pihome_temperature", self.temperature),
                 Metric("pihome_humidity", self.humidity)
