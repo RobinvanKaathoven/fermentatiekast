@@ -5,8 +5,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
 from flask_swagger_ui import get_swaggerui_blueprint
 
+from ruleEngine.RuleEngine import RuleEngine
 from sensors.temperature import TemperatureSensor
 from threading import Thread
+
+from ruleEngine.Rule import Rule
+
+
 print("Things have been imported")
 
 app = Flask(__name__)
@@ -98,70 +103,6 @@ def metrics():
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 
-#rules
-class Rule():
-    def __init__(self, name, validation, controlFunction):
-        self.name = name
-        self.validation = validation
-        self.controlFunction = controlFunction
-
-rules = []
-def addRule(rule):
-    rules.append(rule)
-
-def controlHydratingHeater(validation):
-    if(validation()) :
-        print("Turning on Waterheater %.2f H" % temperatureSensor.humidity)
-    else:
-        print("Turning off Waterheater %.2f H" % temperatureSensor.humidity)
-def controlDehydrator(validation):
-    if(validation()) :
-        print("Turning on Dehydrator%.2f H" % temperatureSensor.humidity)
-    else:   
-        print("Turning off Dehydrator%.2f H" % temperatureSensor.humidity)
-def controlLampHeater(validation):
-    if(validation()) :
-        print("Turning on Lamp heater%.2f C" % temperatureSensor.temperature)
-    else:
-        print("Turning off Lamp heater%.2f C" % temperatureSensor.temperature)
-def controlFridge(validation):
-    if(validation()) :
-        print("Turning on Fridge%.2f C" % temperatureSensor.temperature)
-    else:
-        print("Turning off Fridge%.2f C" % temperatureSensor.temperature)
-
-def hydrateValidation():
-    if temperatureSensor.read()[1].value < 40:
-        return True
-    return False
-
-def dehydrateValidation():
-    if temperatureSensor.read()[1].value > 60:
-        return True
-    return False
-
-def heatingValidation():
-    if temperatureSensor.read()[0].value < 15:
-        return True
-    return False
-
-def coolingValidation():
-    if temperatureSensor.read()[0].value > 25:
-        return True
-    return False
-
-addRule(Rule("hydrate", hydrateValidation, controlHydratingHeater))
-addRule(Rule("dehydrate", dehydrateValidation, controlDehydrator))
-addRule(Rule("heating", heatingValidation, controlLampHeater))
-addRule(Rule("cooling", coolingValidation, controlFridge))
-
-def ruleEvaluation():
-    while True:
-        print("Evaluating Rules")
-        for rule in rules:
-            rule.controlFunction(rule.validation)
-        time.sleep(15)
-
 
 #swagger configs
 swaggerUrl = '/swagger' # URL for the Swagger UI
@@ -176,8 +117,13 @@ swaggerBlueprint = get_swaggerui_blueprint(
 
 app.register_blueprint(swaggerBlueprint, url_prefix=swaggerUrl)
 
+ruleEngine = RuleEngine(temperatureSensor)
+def ruleEvaluation():
+    while True:
+        ruleEngine.evaluateRules()
+        time.sleep(5)
 if __name__ == '__main__':
     thread = Thread(target = ruleEvaluation, args = ())
-    #thread.start()
+    thread.start()
     app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
 
