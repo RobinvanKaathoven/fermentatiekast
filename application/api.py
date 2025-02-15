@@ -1,6 +1,7 @@
 import os, sys
 import time
 from flask import Flask
+from flask import render_template 
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -14,7 +15,7 @@ from ruleEngine.Rule import Rule
 
 print("Things have been imported")
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fermentation.db' # Using SQLite for simplicity
 
 db = SQLAlchemy(app)
@@ -94,15 +95,14 @@ api.add_resource(FermentationsResource, '/api/fermentation/')
 
 @app.route('/')
 def home():
-    return "Welcome to the Home Page!"
-temperatureSensor = TemperatureSensor(4)
+    message = "Hello, World"
+    return render_template('index.html', message=message)
+
 @app.route("/metrics")
 def metrics():
     metrics = temperatureSensor.read()
     result = [metric.to_prometheus() for metric in metrics]
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
-
-
 
 #swagger configs
 swaggerUrl = '/swagger' # URL for the Swagger UI
@@ -117,6 +117,7 @@ swaggerBlueprint = get_swaggerui_blueprint(
 
 app.register_blueprint(swaggerBlueprint, url_prefix=swaggerUrl)
 
+temperatureSensor = TemperatureSensor(4)
 ruleEngine = RuleEngine(temperatureSensor)
 def ruleEvaluation():
     while True:
