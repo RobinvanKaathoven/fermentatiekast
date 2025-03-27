@@ -1,12 +1,40 @@
-from ruleEngine.Rule import Rule
+from .Controller import Controller
+
+class StatusChange:
+    def __init__(self):
+        self.OFF = -1
+        self.ON = 1
+        self.NONE = 0
+statusChange = StatusChange()
 class RuleEngine:
     def __init__(self, temperatureSensor):
         self.temperatureSensor = temperatureSensor
         self.rules = []
-        self.addRule(Rule("hydrate", hydrateValidation, controlHydratingHeater))
-        self.addRule(Rule("dehydrate", dehydrateValidation, controlDehydrator))
-        self.addRule(Rule("heating", heatingValidation, controlLampHeater))
-        self.addRule(Rule("cooling", coolingValidation, controlFridge))
+        self.addRule(Controller("hydrate", hydrateValidation, controlHydratingHeater))
+        self.addRule(Controller("dehydrate", dehydrateValidation, controlDehydrator))
+        self.addRule(Controller("heating", heatingValidation, controlLampHeater))
+        self.addRule(Controller("cooling", coolingValidation, controlFridge))
+
+    
+
+    temperatureThreshold = 3
+    targetTemperature = 15
+    humidityThreshold = 10
+    targetHumidity = 50
+    def setTargetTemperature(self, temperature):
+        print(f"Setting target temperature to {temperature}")
+        targetTemperature = temperature
+    def setTemperatureThreshold(self, threshold):
+        print(f"Setting temperature threshold to {threshold}")
+        temperatureThreshold = threshold
+
+    def setTargetHumidity(self, humidity):
+        print(f"Setting target humidity to {humidity}")
+        targetHumidity = humidity
+
+    def setHumidityThreshold(self, threshold):
+        print(f"Setting humidity threshold to {threshold}")
+        humidityThreshold = threshold
 
     def addRule(self, rule):
         self.rules.append(rule)
@@ -15,47 +43,64 @@ class RuleEngine:
         print("Evaluating Rules")
         value = self.temperatureSensor.read()
         for rule in self.rules:
-            rule.evaluate(value[0].value, value[1].value)
+            rule.evaluate(value[0].value, value[1].value, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold)
 
 def controlHydratingHeater(validation):
-    if(validation) :
+    if(validation == statusChange.ON) :
         print("Turning on Waterheater")
-    else:
+    elif(validation == statusChange.OFF):
         print("Turning off Waterheater") 
+    else:
+        print("No action needed for Waterheater")
 def controlDehydrator(validation):
-    if(validation) :
+    if(validation == statusChange.ON) :
         print("Turning on Dehydrator")
-    else:   
+    elif(validation == statusChange.OFF):
         print("Turning off Dehydrator")
+    else:
+        print("No action needed for Dehydrator")
 def controlLampHeater(validation):
-    if(validation) :
+    if(validation == statusChange.ON) :
         print("Turning on Lamp heater")
-    else:
+    elif(validation == statusChange.OFF):
         print("Turning off Lamp heater")
-def controlFridge(validation):
-    if(validation) :
-        print("Turning on Fridge")
     else:
+        print("No action needed for Lamp heater")    
+def controlFridge(validation):
+    if(validation == statusChange.ON):
+        print("Turning on Fridge")
+    elif(validation == statusChange.OFF):
         print("Turning off Fridge")
+    else:
+        print("No action needed for Fridge")
 
-def hydrateValidation(temperature, humidity):
-    if humidity < 40:
-        return True
-    return False
+def hydrateValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
+    if humidity < targetHumidity - humidityThreshold:
+        return statusChange.ON
+    elif humidity > targetHumidity:
+        return statusChange.OFF
+    return statusChange.NONE
 
-def dehydrateValidation(temperature, humidity):
-    if humidity > 60:
-        return True
-    return False
+def dehydrateValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
+    if humidity > targetHumidity + humidityThreshold:
+        return statusChange.ON
+    elif humidity < targetHumidity:
+        return statusChange.OFF
+    return statusChange.NONE
 
-def heatingValidation(temperature, humidity):
-    if temperature < 15:
-        return True
-    return False
+def heatingValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
+    if temperature < targetTemperature - temperatureThreshold:
+        return statusChange.ON
+    elif temperature > targetTemperature:
+        return statusChange.OFF
+    return statusChange.NONE
 
-def coolingValidation(temperature, humidity):
-    if temperature > 25:
-        return True
-    return False
+def coolingValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):    
+    if temperature > targetTemperature + temperatureThreshold:
+        return statusChange.ON
+    elif temperature < targetTemperature:
+        return statusChange.OFF
+    return statusChange.NONE
+    
 
 
