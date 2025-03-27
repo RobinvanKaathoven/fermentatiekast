@@ -35,11 +35,12 @@ class TemperatureSensor:
                 Metric("pihome_humidity", self.humidity)
             ]
         else:
-            self.temperature += random.randint(-10, 10)
-            self.humidity += random.randint(-10, 10)
             return [
                 Metric("pihome_temperature", self.temperature),
                 Metric("pihome_humidity", self.humidity)
             ]
+    def set(self, temperature, humidity):
+        self.temperature = temperature
+        self.humidity = humidity
         
             
