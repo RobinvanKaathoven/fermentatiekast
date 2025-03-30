@@ -13,6 +13,7 @@ class Metric:
         self.name = name
         self.labels = labels
         self.value = value
+        
     
     def to_prometheus(self):
         labels = ', '.join([f"{key}=\"{val}\"" for key, val in self.labels.items()])
@@ -25,9 +26,10 @@ class TemperatureSensor:
         except NameError as error:
             self.temperature = 20
             self.humidity = 50
+            self.dht_device = None
             
     def read(self, retries=5):
-        try:
+        if self.dht_device is not None:
             self.temperature = self.dht_device.temperature
             self.humidity = self.dht_device.humidity
             
@@ -35,10 +37,23 @@ class TemperatureSensor:
                 Metric("pihome_temperature", self.temperature),
                 Metric("pihome_humidity", self.humidity)
             ]
-        except AttributeError as error:
-            self.temperature += random.randint(-10, 10)
-            self.humidity += random.randint(-10, 10)
+        else:
             return [
                 Metric("pihome_temperature", self.temperature),
                 Metric("pihome_humidity", self.humidity)
             ]
+        
+    def readJson(self):
+        if self.dht_device is not None:
+            self.temperature = self.dht_device.temperature
+            self.humidity = self.dht_device.humidity
+        return {
+            "temperature": self.temperature,
+            "humidity": self.humidity
+        }
+    
+    def set(self, temperature, humidity):
+        self.temperature = temperature
+        self.humidity = humidity
+        
+            
