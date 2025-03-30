@@ -38,6 +38,28 @@ sensorFields = {
     'humidity': fields.Integer
 }
 
+testRelais_args = reqparse.RequestParser()
+testRelais_args.add_argument('number', type=int, help='Number of the relais to test', required=True)
+testRelais_args.add_argument('status', type=bool, help='turn off or on', required=True)
+testRelaisFields = {    
+    'number': fields.Integer,
+    'status': fields.Boolean
+}
+
+class TestRelaisResource(Resource):
+    @marshal_with(testRelaisFields)
+    def post(self):
+        args = testRelais_args.parse_args()
+        number = args['number']
+        status = args['status']
+        if status:
+            ruleEngine.testOn(number)
+        else:
+            ruleEngine.testOff(number)
+        return {'number': number, 'status': status}
+if DEBUG_MODE:
+    api.add_resource(TestRelaisResource, '/api/testrelais/')
+
 class MockResource(Resource):
     @marshal_with(sensorFields)
     def get(self):
@@ -48,7 +70,8 @@ class MockResource(Resource):
         args = sensor_args.parse_args()
         temperatureSensor.set(args['temperature'], args['humidity'])
         return {'temperature': temperatureSensor.temperature, 'humidity': temperatureSensor.humidity}
-api.add_resource(MockResource, '/api/mock/')
+if DEBUG_MODE:
+    api.add_resource(MockResource, '/api/mock/')
 
 class TargetResource(Resource):
     @marshal_with(sensorFields)

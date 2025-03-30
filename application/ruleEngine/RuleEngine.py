@@ -1,4 +1,5 @@
 from .Controller import Controller
+from .RelaisController import RelaisController
 
 class StatusChange:
     def __init__(self):
@@ -10,17 +11,25 @@ class RuleEngine:
     def __init__(self, temperatureSensor):
         self.temperatureSensor = temperatureSensor
         self.rules = []
-        self.addRule(Controller("hydrate", hydrateValidation, controlHydratingHeater))
-        self.addRule(Controller("dehydrate", dehydrateValidation, controlDehydrator))
-        self.addRule(Controller("heating", heatingValidation, controlLampHeater))
-        self.addRule(Controller("cooling", coolingValidation, controlFridge))
+        self.addRule(Controller("hydrate", hydrateValidation, controlHydratingHeater, 0))
+        self.addRule(Controller("dehydrate", dehydrateValidation, controlDehydrator, 1))
+        self.addRule(Controller("heating", heatingValidation, controlLampHeater, 2))
+        self.addRule(Controller("cooling", coolingValidation, controlFridge, 3))
 
-    
+        ports = [21, 20, 16, 12, 26, 19, 13, 6]
+
+        self.relaisController = RelaisController(ports)
 
     temperatureThreshold = 3
     targetTemperature = 15
     humidityThreshold = 10
     targetHumidity = 50
+
+    def testOn(self, number):
+        self.relaisController.turnOn(number)
+    def testOff(self, number):
+        self.relaisController.turnOff(number)
+        
     def setTargetTemperature(self, temperature):
         print(f"Setting target temperature to {temperature}")
         self.targetTemperature = temperature
