@@ -54,7 +54,7 @@ class FermentationResource(Resource):
         return fermentation
 
     @marshal_with(fermentationFields)
-    def patch(self, fermentation_id):
+    def put(self, fermentation_id):
         print(fermentation_id)
         args = fermentation_args.parse_args()
         fermentation = Fermentation.query.get(fermentation_id)
@@ -64,6 +64,8 @@ class FermentationResource(Resource):
             fermentation.name = args['name']
         if 'temperature' in args:
             fermentation.temperature=args['temperature']
+        if 'humidity' in args:
+            fermentation.temperature=args['humidity']
         if 'duration' in args:
             fermentation.duration=args['duration']
         if 'startDate' in args:
@@ -72,3 +74,11 @@ class FermentationResource(Resource):
             fermentation.endDate=args['endDate']      
         db.session.commit()
         return fermentation, 201
+    
+    def delete(self, fermentation_id):
+        fermentation = Fermentation.query.get(fermentation_id)
+        if not fermentation:
+            abort(404, message="Fermentation not found")
+        db.session.delete(fermentation)
+        db.session.commit()
+        return '', 204

@@ -39,6 +39,16 @@ class TemperatureSensor:
                 Metric("pihome_temperature", self.temperature),
                 Metric("pihome_humidity", self.humidity)
             ]
+        
+    def readJson(self):
+        if self.dht_device is not None:
+            self.temperature = self.dht_device.temperature
+            self.humidity = self.dht_device.humidity
+        return {
+            "temperature": self.temperature,
+            "humidity": self.humidity
+        }
+    
     def set(self, temperature, humidity):
         self.temperature = temperature
         self.humidity = humidity

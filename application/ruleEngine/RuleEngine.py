@@ -23,18 +23,27 @@ class RuleEngine:
     targetHumidity = 50
     def setTargetTemperature(self, temperature):
         print(f"Setting target temperature to {temperature}")
-        targetTemperature = temperature
+        self.targetTemperature = temperature
     def setTemperatureThreshold(self, threshold):
         print(f"Setting temperature threshold to {threshold}")
-        temperatureThreshold = threshold
+        self.temperatureThreshold = threshold
 
     def setTargetHumidity(self, humidity):
         print(f"Setting target humidity to {humidity}")
-        targetHumidity = humidity
+        self.targetHumidity = humidity
 
     def setHumidityThreshold(self, threshold):
         print(f"Setting humidity threshold to {threshold}")
-        humidityThreshold = threshold
+        self.humidityThreshold = threshold
+
+    def getTargetTemperature(self):
+        return self.targetTemperature
+    def getTemperatureThreshold(self):
+        return self.temperatureThreshold
+    def getTargetHumidity(self):
+        return self.targetHumidity
+    def getHumidityThreshold(self):
+        return self.humidityThreshold
 
     def addRule(self, rule):
         self.rules.append(rule)

@@ -14,6 +14,8 @@ from threading import Thread
 from ruleEngine.Controller import Controller
 from fermentation.FermentationResource import *
 
+import json
+
 DEBUG_MODE = True
 print("Things have been imported")
 
@@ -22,28 +24,44 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fermentation.db' # Using SQLi
 db.init_app(app)
 api = Api(app)
 
+temperatureSensor = TemperatureSensor(4)
+ruleEngine = RuleEngine(temperatureSensor)
+
 api.add_resource(FermentationResource, '/api/fermentation/<int:fermentation_id>')
 api.add_resource(FermentationsResource, '/api/fermentation/')
 
-mock_args = reqparse.RequestParser()
-mock_args.add_argument('temperature', type=float, help='Temperature of the mock sensor', required=True)
-mock_args.add_argument('humidity', type=int, help='Humidity of the mock sensor', required=True)
-mockFields = {
+sensor_args = reqparse.RequestParser()
+sensor_args.add_argument('temperature', type=float, help='Temperature of the mock sensor', required=True)
+sensor_args.add_argument('humidity', type=int, help='Humidity of the mock sensor', required=True)
+sensorFields = {
     'temperature': fields.Float,
     'humidity': fields.Integer
 }
 
 class MockResource(Resource):
-    @marshal_with(mockFields)
+    @marshal_with(sensorFields)
     def get(self):
         return {'temperature': temperatureSensor.temperature, 'humidity': temperatureSensor.humidity}
 
-    @marshal_with(mockFields)
+    @marshal_with(sensorFields)
     def post(self):
-        args = mock_args.parse_args()
+        args = sensor_args.parse_args()
         temperatureSensor.set(args['temperature'], args['humidity'])
         return {'temperature': temperatureSensor.temperature, 'humidity': temperatureSensor.humidity}
 api.add_resource(MockResource, '/api/mock/')
+
+class TargetResource(Resource):
+    @marshal_with(sensorFields)
+    def get(self):
+        return {'temperature': ruleEngine.getTargetTemperature(), 'humidity': ruleEngine.getTargetHumidity()}
+
+    @marshal_with(sensorFields)
+    def post(self):
+        args = sensor_args.parse_args()
+        ruleEngine.setTargetTemperature(args['temperature'])
+        ruleEngine.setTargetHumidity(args['humidity'])
+        return {'temperature': ruleEngine.getTargetTemperature(), 'humidity': ruleEngine.getTargetHumidity()}
+api.add_resource(TargetResource, '/api/target/')
 
 
 @app.route('/')
@@ -56,6 +74,12 @@ def metrics():
     metrics = temperatureSensor.read()
     result = [metric.to_prometheus() for metric in metrics]
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
+@app.route("/api/current")
+def current():
+    data = temperatureSensor.readJson()
+    return json.dumps(data)
+
 
 #swagger configs
 swaggerUrl = '/swagger' # URL for the Swagger UI
@@ -70,8 +94,7 @@ swaggerBlueprint = get_swaggerui_blueprint(
 
 app.register_blueprint(swaggerBlueprint, url_prefix=swaggerUrl)
 
-temperatureSensor = TemperatureSensor(4)
-ruleEngine = RuleEngine(temperatureSensor)
+
 def ruleEvaluation():
     while True:
         ruleEngine.evaluateRules()
