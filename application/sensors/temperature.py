@@ -30,9 +30,12 @@ class TemperatureSensor:
             
     def read(self, retries=5):
         if self.dht_device is not None:
-            self.temperature = self.dht_device.temperature
-            self.humidity = self.dht_device.humidity
-            
+            try:
+                self.temperature = self.dht_device.temperature
+                self.humidity = self.dht_device.humidity
+            except RuntimeError as error:
+                #Happens. Screw DHTs
+                1+1
             return [
                 Metric("pihome_temperature", self.temperature),
                 Metric("pihome_humidity", self.humidity)
