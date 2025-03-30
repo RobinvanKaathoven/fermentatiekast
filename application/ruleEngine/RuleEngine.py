@@ -7,6 +7,10 @@ class StatusChange:
         self.ON = 1
         self.NONE = 0
 statusChange = StatusChange()
+
+ports = [21, 20, 16, 12, 26, 19, 13, 6]
+relaisController = RelaisController(ports)
+
 class RuleEngine:
     def __init__(self, temperatureSensor):
         self.temperatureSensor = temperatureSensor
@@ -16,9 +20,6 @@ class RuleEngine:
         self.addRule(Controller("heating", heatingValidation, controlLampHeater, 2))
         self.addRule(Controller("cooling", coolingValidation, controlFridge, 3))
 
-        ports = [21, 20, 16, 12, 26, 19, 13, 6]
-
-        self.relaisController = RelaisController(ports)
 
     temperatureThreshold = 3
     targetTemperature = 15
@@ -29,7 +30,7 @@ class RuleEngine:
         self.relaisController.turnOn(number)
     def testOff(self, number):
         self.relaisController.turnOff(number)
-        
+
     def setTargetTemperature(self, temperature):
         print(f"Setting target temperature to {temperature}")
         self.targetTemperature = temperature
@@ -63,28 +64,33 @@ class RuleEngine:
         for rule in self.rules:
             rule.evaluate(value[0].value, value[1].value, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold)
 
-def controlHydratingHeater(validation):
+def controlHydratingHeater(validation, port):
+    relaisController.switch(port, validation)
     if(validation == statusChange.ON) :
         print("Turning on Waterheater")
     elif(validation == statusChange.OFF):
         print("Turning off Waterheater") 
+        turnOff(port)
     else:
         print("No action needed for Waterheater")
-def controlDehydrator(validation):
+def controlDehydrator(validation, port):
+    relaisController.switch(port, validation)
     if(validation == statusChange.ON) :
         print("Turning on Dehydrator")
     elif(validation == statusChange.OFF):
         print("Turning off Dehydrator")
     else:
         print("No action needed for Dehydrator")
-def controlLampHeater(validation):
+def controlLampHeater(validation, port):
+    relaisController.switch(port, validation)
     if(validation == statusChange.ON) :
         print("Turning on Lamp heater")
     elif(validation == statusChange.OFF):
         print("Turning off Lamp heater")
     else:
         print("No action needed for Lamp heater")    
-def controlFridge(validation):
+def controlFridge(validation, port):
+    relaisController.switch(port, validation)
     if(validation == statusChange.ON):
         print("Turning on Fridge")
     elif(validation == statusChange.OFF):
