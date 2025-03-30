@@ -80,7 +80,9 @@ tr:nth-child(even) {
 tr:hover {
     background-color: rgba(76, 195, 247, 0.2);
 }
-
+span#alert {
+    color: rgb(113, 160, 25);
+}
 @media screen and (max-width: 600px) {
     form, table {
         width: 90%;
@@ -93,4 +95,6 @@ tr:hover {
     input, select, button {
         font-size: 14px;
     }
+
+   
 }
