@@ -1,17 +1,17 @@
 try:
-        adafruit_dht = __import__("RPi.GPIO")
+    RPi = __import__("RPi.GPIO")
 except:
-        random = __import__("random")
-# import RPi.GPIO as GPIO
+    random = __import__("random")
 
 class RelaisController:
     def __init__(self, ports):
         self.ports = ports
         try:
-            RPi.GPIO.setmode(GPIO.BCM)
-            for i in self.ports.length:
-                RPi.GPIO.setup(self.ports[i], RPi.GPIO.OUT)
-                RPi.GPIO.output(self.ports[i], False)                  
+            RPi.GPIO.setmode(RPi.GPIO.BCM)
+            for i in self.ports:
+                print(i)
+                RPi.GPIO.setup(i, RPi.GPIO.OUT)
+                RPi.GPIO.output(i, False)                  
         except NameError as error:
             print("RPi.GPIO not found, using mock GPIO")
                     
