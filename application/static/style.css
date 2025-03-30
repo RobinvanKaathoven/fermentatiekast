@@ -1,4 +1,96 @@
-h1{ 
-    color: red; 
-    font-size: 36px; 
+/* style.css */
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #0e1a26;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h2, h3 {
+    color: #4FC3F7;
+    text-shadow: 1px 1px 5px rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+}
+
+form {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input, select, button {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+input:focus, select:focus, button:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 195, 247, 0.8);
+}
+
+button {
+    background-color: #4FC3F7;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #3bb1e3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th {
+    background-color: #1c2a42;
+    padding: 15px;
+}
+
+td {
+    padding: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+tr:nth-child(even) {
+    background: rgba(76, 195, 247, 0.1);
+}
+
+tr:hover {
+    background-color: rgba(76, 195, 247, 0.2);
+}
+
+@media screen and (max-width: 600px) {
+    form, table {
+        width: 90%;
+    }
+
+    h2, h3 {
+        font-size: 1.5rem;
+    }
+
+    input, select, button {
+        font-size: 14px;
+    }
 }
