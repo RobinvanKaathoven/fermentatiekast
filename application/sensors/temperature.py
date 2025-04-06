@@ -23,6 +23,8 @@ class TemperatureSensor:
     def __init__(self, data_pin):
         try:
             self.dht_device = adafruit_dht.DHT22(board.D4, use_pulseio=False)
+            self.temperature = 0
+            self.humidity = 0
         except NameError as error:
             self.temperature = 20
             self.humidity = 50

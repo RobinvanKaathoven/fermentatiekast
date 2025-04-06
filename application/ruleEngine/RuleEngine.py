@@ -27,9 +27,9 @@ class RuleEngine:
     targetHumidity = 50
 
     def testOn(self, number):
-        self.relaisController.turnOn(number)
+        relaisController.turnOn(number)
     def testOff(self, number):
-        self.relaisController.turnOff(number)
+        relaisController.turnOff(number)
 
     def setTargetTemperature(self, temperature):
         print(f"Setting target temperature to {temperature}")

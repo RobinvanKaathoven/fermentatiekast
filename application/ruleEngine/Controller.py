@@ -6,5 +6,5 @@ class Controller():
         self.state = False
         self.port = port
     def evaluate(self, temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
-        self.controlFunction(self.validationFunction(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold))
+        self.controlFunction(self.validationFunction(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold), self.port)
     
