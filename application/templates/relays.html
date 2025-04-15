@@ -1,0 +1,139 @@
+DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relay Board Management</title>
+    <link rel="stylesheet" href="/static/style.css" /> 
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Relay Board Management</h1>
+
+<form id="relayForm">
+    <input type="text" id="relayName" placeholder="Relay Name" required />
+    <input type="number" id="relayPort" placeholder="Relay Port" required />
+    <button type="submit">Add Relay</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Relay Name</th>
+            <th>Relay Port</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="relayTableBody">
+        <!-- Relay rows will be added here -->
+    </tbody>
+</table>
+
+<script>
+    const relayForm = document.getElementById('relayForm');
+    const relayTableBody = document.getElementById('relayTableBody');
+
+    // Function to fetch all relay information from the server
+    function fetchAllRelays() {
+        fetch('/api/relays')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(relay => {
+                    addRelayToTable(relay.name, relay.port, relay.status);
+                });
+            })
+            .catch(error => console.error('Error fetching relays:', error));
+    }
+
+    // Function to fetch relay statuses periodically
+    function fetchRelayStatuses() {
+        fetch('/api/relays/')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(relay => {
+                    const row = document.getElementById(`relay-${relay.port}`);
+                    if (row) {
+                        row.cells[2].innerText = relay.status ? 'On' : 'Off';
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching relay statuses:', error));
+    }
+
+    // Function to add relay to the table
+    function addRelayToTable(name, port, status) {
+        const row = document.createElement('tr');
+        row.id = `relay-${port}`;
+        row.innerHTML = `
+            <td>${name}</td>
+            <td>${port}</td>
+            <td>${status ? 'On' : 'Off'}</td>
+            <td><button onclick="removeRelay('${port}')">Remove</button></td>
+        `;
+        relayTableBody.appendChild(row);
+    }
+
+    // Periodically fetch relay statuses every 5 seconds
+    setInterval(fetchRelayStatuses, 5000);
+
+    // Fetch all relays on page load
+    window.onload = fetchAllRelays;
+
+    relayForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const name = document.getElementById('relayName').value;
+        const port = document.getElementById('relayPort').value;
+
+        // Add relay row to the table
+        addRelayToTable(name, port, 'Loading...');
+
+        // Send a request to add the new relay to the server
+        fetch('/api/relays', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, port })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Once added, you might want to update the status with the real data
+            document.getElementById(`relay-${port}`).cells[2].innerText = data.status ? 'On' : 'Off';
+        })
+        .catch(error => console.error('Error adding relay:', error));
+
+        relayForm.reset();
+    });
+
+    function removeRelay(port) {
+        const row = document.getElementById(`relay-${port}`);
+        if (row) {
+            relayTableBody.removeChild(row);
+            // Send a request to remove the relay from the server
+            fetch(`/api/relay/${port}`, { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to delete the relay');
+                    }
+                })
+                .catch(error => console.error('Error deleting relay:', error));
+        }
+    }
+</script>
+
+</body>
+</html>

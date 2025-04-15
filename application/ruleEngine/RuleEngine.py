@@ -1,5 +1,5 @@
-from .Controller import Controller
-from .RelaisController import RelaisController
+from .Rule import Rule
+from .RelaisController import relaisController
 
 class StatusChange:
     def __init__(self):
@@ -9,17 +9,15 @@ class StatusChange:
 statusChange = StatusChange()
 
 ports = [21, 20, 16, 12, 26, 19, 13, 6]
-relaisController = RelaisController(ports)
+relaisController.setPorts(ports)
 
 class RuleEngine:
-    def __init__(self, temperatureSensor):
-        self.temperatureSensor = temperatureSensor
+    def __init__(self):
         self.rules = []
-        self.addRule(Controller("hydrate", hydrateValidation, controlHydratingHeater, 0))
-        self.addRule(Controller("dehydrate", dehydrateValidation, controlDehydrator, 1))
-        self.addRule(Controller("heating", heatingValidation, controlLampHeater, 2))
-        self.addRule(Controller("cooling", coolingValidation, controlFridge, 3))
-
+        # self.addRule(Rule("hydrate", "humidity", "low", 5, 0))
+        # self.addRule(Rule("dehydrate", "humidity", "high", 5, 1))
+        # self.addRule(Rule("heat", "temperature", "low", 2, 2))
+        # self.addRule(Rule("cool", "temperature", "high", 2, 3))
 
     temperatureThreshold = 3
     targetTemperature = 15
@@ -57,74 +55,69 @@ class RuleEngine:
 
     def addRule(self, rule):
         self.rules.append(rule)
+    def removeRule(self, rule):
+        self.rules.remove(rule)
     
-    def evaluateRules(self):
+    def validateRule(self, rule, temperature, humidity):
+        if rule.type == "humidity" :
+            if rule.variant == "Too Low":
+                return hydrateValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+            elif rule.variant == "Too High":
+                return dehydrateValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+        elif rule.type == "temperature":
+            return heatingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+        elif rule.type == "cooling":
+            return coolingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+        else:
+            return statusChange.NONE
+
+    def evaluateRules(self, temperature, humidity):
         print("Evaluating Rules")
-        value = self.temperatureSensor.read()
         for rule in self.rules:
-            rule.evaluate(value[0].value, value[1].value, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold)
+            relaisController.switch(rule.relay, self.validateRule(rule, temperature, humidity))    
+            #relaisController.switch(rule.port, rule.validationFunction(temperature, humidity, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold))
 
 def controlHydratingHeater(validation, port):
     relaisController.switch(port, validation)
-    if(validation == statusChange.ON) :
-        print("Turning on Waterheater")
-    elif(validation == statusChange.OFF):
-        print("Turning off Waterheater") 
-        turnOff(port)
-    else:
-        print("No action needed for Waterheater")
+    
 def controlDehydrator(validation, port):
     relaisController.switch(port, validation)
-    if(validation == statusChange.ON) :
-        print("Turning on Dehydrator")
-    elif(validation == statusChange.OFF):
-        print("Turning off Dehydrator")
-    else:
-        print("No action needed for Dehydrator")
+    
 def controlLampHeater(validation, port):
     relaisController.switch(port, validation)
-    if(validation == statusChange.ON) :
-        print("Turning on Lamp heater")
-    elif(validation == statusChange.OFF):
-        print("Turning off Lamp heater")
-    else:
-        print("No action needed for Lamp heater")    
+    
 def controlFridge(validation, port):
     relaisController.switch(port, validation)
-    if(validation == statusChange.ON):
-        print("Turning on Fridge")
-    elif(validation == statusChange.OFF):
-        print("Turning off Fridge")
-    else:
-        print("No action needed for Fridge")
+    
 
-def hydrateValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
-    if humidity < targetHumidity - humidityThreshold:
+
+def hydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
+    if humidity < targetHumidity - threshold:
         return statusChange.ON
     elif humidity > targetHumidity:
         return statusChange.OFF
     return statusChange.NONE
 
-def dehydrateValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
-    if humidity > targetHumidity + humidityThreshold:
+def dehydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
+    if humidity > targetHumidity + threshold:
         return statusChange.ON
     elif humidity < targetHumidity:
         return statusChange.OFF
     return statusChange.NONE
 
-def heatingValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):
-    if temperature < targetTemperature - temperatureThreshold:
+def heatingValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
+    if temperature < targetTemperature - threshold:
         return statusChange.ON
     elif temperature > targetTemperature:
         return statusChange.OFF
     return statusChange.NONE
 
-def coolingValidation(temperature, humidity, targetTemperature, targetHumidity, temperatureThreshold, humidityThreshold):    
-    if temperature > targetTemperature + temperatureThreshold:
+def coolingValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):    
+    if temperature > targetTemperature + threshold:
         return statusChange.ON
     elif temperature < targetTemperature:
         return statusChange.OFF
     return statusChange.NONE
     
-
+ruleEngine = RuleEngine()
 

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rule Manager</title>
+  <link rel="stylesheet" href="/static/style.css" /> 
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      const ruleList = document.getElementById('rule-list');
+      const ruleForm = document.getElementById('rule-form');
+      const ruleName = document.getElementById('rule-name');
+      const typeField = document.getElementById('rule-type');
+      const extraFields = document.getElementById('extra-fields');
+      const relayField = document.getElementById('relay');
+
+      let editingRuleId = null;
+
+      async function fetchRelays() {
+        const response = await fetch('/api/relays');
+        const relays = await response.json();
+        relayField.innerHTML = relays.map(relay => `<option value="${relay.port}">${relay.name} - ${relay.port}</option>`).join('');
+      }
+
+      async function fetchRules() {
+        const response = await fetch('/api/rules');
+        const rules = await response.json();
+        
+        const ruleTableBody = document.getElementById('ruleTableBody');
+        ruleTableBody.innerHTML = rules.map(rule => `
+          <tr>
+            <td>${rule.name}</td>
+            <td>${rule.type}</td>
+            <td>${rule.variant || ''}</td>
+            <td>${rule.relay}</td>
+            <td>${rule.duration || ''}</td>
+            <td>${rule.interval || ''}</td>
+            <td>${rule.threshold || ''}</td>
+            <td>
+              <button onclick="editRule(${rule.id})">Edit</button>
+              <button onclick="deleteRule(${rule.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      window.editRule = async (id) => {
+        const response = await fetch(`/api/rule/${id}`);
+        const rule = await response.json();
+        editingRuleId = rule.id;
+        ruleForm.name.value = rule.name;
+        ruleForm.type.value = rule.type;
+        ruleForm.relay.value = rule.relay;
+        showExtraFields(rule.type, rule);
+      };
+
+      window.deleteRule = async (id) => {
+        await fetch(`/api/rule/${id}`, { method: 'DELETE' });
+        fetchRules();
+      };
+
+      function showExtraFields(type, rule = {}) {
+        if (type === 'time') {
+          extraFields.innerHTML = `
+            <label>Interval (minutes): <input type="number" name="interval" value="${rule.interval || ''}" required /></label>
+            <label>Duration (minutes): <input type="number" name="duration" value="${rule.duration || ''}" required /></label>
+          `;
+        } else if (type === 'temperature' || type === 'humidity') {
+          extraFields.innerHTML = `
+            <label>Threshold: <input type="number" name="threshold" value="${rule.threshold || ''}" required /></label>
+            <label>
+              Variant:
+              <select name="variant">
+                <option value="low" ${rule.variant === 'low' ? 'selected' : ''}>Turn on when too Low</option>
+                <option value="high" ${rule.variant === 'high' ? 'selected' : ''}>Turn on when too High</option>
+              </select>
+            </label>
+          `;
+        } else {
+          extraFields.innerHTML = '';
+        }
+      }
+
+      typeField.addEventListener('change', (e) => {
+        showExtraFields(e.target.value);
+      });
+
+      ruleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(ruleForm);
+        const rule = Object.fromEntries(formData.entries());
+        rule.interval = parseInt(rule.interval);
+        rule.duration = parseInt(rule.duration);
+        rule.threshold = parseInt(rule.threshold);
+        console.log(ruleForm);
+        console.log(formData.entries());
+        console.log(rule);
+        const method = editingRuleId ? 'PUT' : 'POST';
+        const url = editingRuleId ? `/api/rule/${editingRuleId}` : '/api/rules';
+        await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rule),
+        });
+
+        editingRuleId = null;
+        ruleForm.reset();
+        extraFields.innerHTML = '';
+        fetchRules();
+      });
+
+      fetchRelays();
+      fetchRules();
+    });
+  </script>
+</head>
+<body>
+  <h1>Rule Manager</h1>
+  <form id="rule-form">
+    <label>Name:
+        <input type="text" id="rule-name" name="name" placeholder="Rule Name" required />
+    </label>
+    <label>Type:
+      <select id="rule-type" name="type" required>
+        <option value="">--Select Type--</option>
+        <option value="time">Time-based</option>
+        <option value="temperature">Temperature</option>
+        <option value="humidity">Humidity</option>
+      </select>
+    </label>
+    <label>Relay:
+      <select id="relay" name="relay" required></select>
+    </label>
+    <div id="extra-fields"></div>
+    <button type="submit">Save Rule</button>
+  </form>
+  <h2>Existing Rules</h2>
+  
+  <table>
+    <thead>
+        <tr>
+            <th>Rule Name</th>
+            <th>Type</th>
+            <th>Variant</th>
+            <th>Relay</th>
+            <th>Duration</th>
+            <th>Interval</th>
+            <th>Threshold</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="ruleTableBody">
+        <!-- Rule rows will be added here -->
+    </tbody>
+</table>
+</body>
+</html>

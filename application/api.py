@@ -7,12 +7,14 @@ from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
 from flask_swagger_ui import get_swaggerui_blueprint
 from util import db
 
-from ruleEngine.RuleEngine import RuleEngine
+from ruleEngine.RuleEngine import ruleEngine
 from sensors.temperature import TemperatureSensor
 from threading import Thread
 
-from ruleEngine.Controller import Controller
+from ruleEngine.Rule import Rule
 from fermentation.FermentationResource import *
+from ruleEngine.RelayResource import *
+from ruleEngine.RuleResource import *
 
 import json
 
@@ -25,10 +27,14 @@ db.init_app(app)
 api = Api(app)
 
 temperatureSensor = TemperatureSensor(4)
-ruleEngine = RuleEngine(temperatureSensor)
 
 api.add_resource(FermentationResource, '/api/fermentation/<int:fermentation_id>')
 api.add_resource(FermentationsResource, '/api/fermentation/')
+api.add_resource(RelayResource, '/api/relay/<int:relay_port>')
+api.add_resource(RelaysResource, '/api/relays/')
+api.add_resource(RulesResource, '/api/rules/')
+api.add_resource(RuleResource, '/api/rule/<int:rule_id>')
+
 
 sensor_args = reqparse.RequestParser()
 sensor_args.add_argument('temperature', type=float, help='Temperature of the mock sensor', required=True)
@@ -86,11 +92,21 @@ class TargetResource(Resource):
         return {'temperature': ruleEngine.getTargetTemperature(), 'humidity': ruleEngine.getTargetHumidity()}
 api.add_resource(TargetResource, '/api/target/')
 
-
 @app.route('/')
 def home():
     message = "Hello, World"
     return render_template('index.html', message=message)
+
+@app.route('/relays')
+def relays():
+    message = "Hello, World"
+    return render_template('relays.html', message=message)
+
+@app.route('/rules')
+def rules():
+    message = "Hello, World"
+    return render_template('rules.html', message=message)
+
 
 @app.route("/metrics")
 def metrics():
@@ -116,14 +132,27 @@ swaggerBlueprint = get_swaggerui_blueprint(
 )
 
 app.register_blueprint(swaggerBlueprint, url_prefix=swaggerUrl)
-
-
+counter = 0
 def ruleEvaluation():
     while True:
-        ruleEngine.evaluateRules()
-        time.sleep(5)
+        global counter
+        counter += 1
+        values = temperatureSensor.read()
+        print(f"{counter} Eval for Temperature: {values[0].value}, Humidity: {values[1].value}")
+        ruleEngine.evaluateRules(values[0].value, values[1].value)
+        time.sleep(10)
+        
 if __name__ == '__main__':
-    thread = Thread(target = ruleEvaluation, args = ())
-    thread.start()
+    with app.app_context():
+        relays = Relay.query.all()
+        relaisController.setPorts([relay.port for relay in relays])
+        rules = Rule.query.all()
+        for rule in rules:
+            ruleEngine.addRule(rule)
+
+        # Start the rule evaluation thread
+        ruleEvaluationThread = Thread(target=ruleEvaluation)
+        ruleEvaluationThread.start()
+    
     app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
 
