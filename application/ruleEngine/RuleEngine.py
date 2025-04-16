@@ -1,5 +1,6 @@
 from .Rule import Rule
 from .RelaisController import relaisController
+import time
 
 class StatusChange:
     def __init__(self):
@@ -68,6 +69,10 @@ class RuleEngine:
             return heatingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
         elif rule.type == "cooling":
             return coolingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+        elif rule.type == "time":
+            value =  timeValidation(rule.duration, rule.interval)
+            print(f"Time validation: {value} for {rule.duration} minutes and {rule.interval} minutes")
+            return timeValidation(rule.duration, rule.interval)
         else:
             return statusChange.NONE
 
@@ -118,6 +123,29 @@ def coolingValidation(temperature, humidity, targetTemperature, targetHumidity, 
     elif temperature < targetTemperature:
         return statusChange.OFF
     return statusChange.NONE
-    
+
+def timeValidation(duration, interval):
+    """
+    Determines if a relay should be powered based on the current time.
+
+    Args:
+        duration (float): Duration in minutes that the relay should be ON.
+        interval (float): Total cycle interval in minutes.
+
+    Returns:
+        bool: True if the relay should be ON, False otherwise.
+    """
+    # Convert duration and interval from minutes to seconds
+    duration_sec = duration * 60
+    interval_sec = interval * 60
+
+    # Get the current time in seconds since epoch
+    current_time = time.time()
+
+    # Find time elapsed within the current interval
+    time_in_cycle = current_time % interval_sec
+
+    return time_in_cycle < duration_sec
+
 ruleEngine = RuleEngine()
 
