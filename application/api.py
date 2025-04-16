@@ -107,6 +107,10 @@ def rules():
     message = "Hello, World"
     return render_template('rules.html', message=message)
 
+@app.route('/climate')
+def climate():
+    message = "Hello, World"
+    return render_template('climate.html', message=message)
 
 @app.route("/metrics")
 def metrics():
