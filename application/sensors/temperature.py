@@ -1,4 +1,5 @@
 import time
+from util.metric import Metric
 
 try:
         adafruit_dht = __import__("adafruit_dht")
@@ -8,17 +9,6 @@ except:
         random = __import__("random")
         print("No AdaFruit DHT found")
 
-class Metric:
-    def __init__(self, name, value, labels={}):
-        self.name = name
-        self.labels = labels
-        self.value = value
-        
-    
-    def to_prometheus(self):
-        labels = ', '.join([f"{key}=\"{val}\"" for key, val in self.labels.items()])
-        return f"{self.name}{{{labels}}} {self.value}"
-  
 class TemperatureSensor:
     def __init__(self, data_pin):
         try:
@@ -30,7 +20,7 @@ class TemperatureSensor:
             self.humidity = 50
             self.dht_device = None
             
-    def read(self, retries=5):
+    def read(self):
         if self.dht_device is not None:
             try:
                 self.temperature = self.dht_device.temperature
@@ -38,16 +28,16 @@ class TemperatureSensor:
             except RuntimeError as error:
                 #Happens. Screw DHTs
                 1+1
-            return [
-                Metric("pihome_temperature", self.temperature),
-                Metric("pihome_humidity", self.humidity)
-            ]
+            return {
+                "temperature": self.temperature,
+                "humidity": self.humidity
+            }
         else:
-            return [
-                Metric("pihome_temperature", self.temperature),
-                Metric("pihome_humidity", self.humidity)
-            ]
-        
+            return {
+                "temperature": self.temperature,
+                "humidity": self.humidity
+            }  
+          
     def readJson(self):
         if self.dht_device is not None:
             self.temperature = self.dht_device.temperature

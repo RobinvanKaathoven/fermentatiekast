@@ -6,6 +6,7 @@ from flask import render_template
 from flask_restful import Api, Resource, reqparse, fields, marshal_with, abort
 from flask_swagger_ui import get_swaggerui_blueprint
 from util import db
+from util.metric import Metric 
 
 from ruleEngine.RuleEngine import ruleEngine
 from sensors.temperature import TemperatureSensor
@@ -114,7 +115,14 @@ def climate():
 
 @app.route("/metrics")
 def metrics():
-    metrics = temperatureSensor.read()
+    temperatureSensorData = temperatureSensor.read()
+    metrics = []
+    for entry in temperatureSensorData:
+        metrics.append(Metric(entry, temperatureSensorData[entry]))
+    relays = Relay.query.all()
+    for relay in relays:
+        relay.status = 1 if relaisController.getPortStatus(relay.port) else 0
+        metrics.append(Metric("relay", relay.status, {"name": relay.name, "type": relay, "port" : relay.port}))
     result = [metric.to_prometheus() for metric in metrics]
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
@@ -142,8 +150,8 @@ def ruleEvaluation():
         global counter
         counter += 1
         values = temperatureSensor.read()
-        print(f"{counter} Eval for Temperature: {values[0].value}, Humidity: {values[1].value}")
-        ruleEngine.evaluateRules(values[0].value, values[1].value)
+        
+        ruleEngine.evaluateRules(values['temperature'], values['humidity'])
         time.sleep(10)
         
 if __name__ == '__main__':
