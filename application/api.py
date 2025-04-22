@@ -123,6 +123,9 @@ def metrics():
     for relay in relays:
         relay.status = 1 if relaisController.getPortStatus(relay.port) else 0
         metrics.append(Metric("relay", relay.status, {"name": relay.name, "type": relay, "port" : relay.port}))
+    metrics.append(Metric("target_temperature", ruleEngine.getTargetTemperature()))
+    metrics.append(Metric("target_humidity", ruleEngine.getTargetHumidity()))
+        
     result = [metric.to_prometheus() for metric in metrics]
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
