@@ -71,7 +71,7 @@ class RuleEngine:
             return coolingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
         elif rule.type == "time":
             value =  timeValidation(rule.duration, rule.interval)
-            print(f"Time validation: {value} for {rule.duration} minutes and {rule.interval} minutes")
+            print(f"Time validation: {value}")
             return timeValidation(rule.duration, rule.interval)
         else:
             return statusChange.NONE
@@ -145,7 +145,10 @@ def timeValidation(duration, interval):
     # Find time elapsed within the current interval
     time_in_cycle = current_time % interval_sec
 
-    return time_in_cycle < duration_sec
+    if time_in_cycle < duration_sec:
+        return StatusChange.ON
+    else:
+        return StatusChange.OFF
 
 ruleEngine = RuleEngine()
 
