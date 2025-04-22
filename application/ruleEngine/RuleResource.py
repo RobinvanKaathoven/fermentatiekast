@@ -80,9 +80,10 @@ class RuleResource(Resource):
         rule.temperature = args['temperature']
         rule.duration = args['duration']
         rule.interval = args['interval']
+        rule.threshold = args['threshold']
         db.session.commit()
 
-        ruleEngine.addRule(Rule(rule.name, rule.type, rule.variant, rule.relay, rule.temperature, rule.duration, rule.interval))
+        ruleEngine.addRule(Rule(rule.name, rule.type, rule.variant, rule.relay, rule.temperature, rule.duration, rule.interval, rule.threshold))
         return rule
     
     @marshal_with(ruleFields)
@@ -93,5 +94,5 @@ class RuleResource(Resource):
         db.session.delete(rule)
         db.session.commit()
 
-        ruleEngine.removeRule(Rule(rule.name, rule.type, rule.variant, rule.relay, rule.temperature, rule.duration, rule.interval))
+        ruleEngine.removeRule(Rule(rule.name, rule.type, rule.variant, rule.relay, rule.temperature, rule.duration, rule.interval, rule.threshold))
         return rule

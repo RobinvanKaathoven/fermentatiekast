@@ -1,5 +1,5 @@
 class Rule():
-    def __init__(self, name, type, variant, relay, temperature, duration, interval, threshold, ):
+    def __init__(self, name, type, variant, relay, temperature, duration, interval, threshold):
         self.name = name
         self.type = type
         self.variant = variant

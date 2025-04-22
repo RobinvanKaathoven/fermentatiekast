@@ -70,8 +70,8 @@ class RuleEngine:
         elif rule.type == "cooling":
             return coolingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
         elif rule.type == "time":
-            value =  timeValidation(rule.duration, rule.interval)
-            print(f"Time validation: {value}")
+            #value =  timeValidation(rule.duration, rule.interval)
+            #print(f"Time validation: {value}")
             return timeValidation(rule.duration, rule.interval)
         else:
             return statusChange.NONE
@@ -79,8 +79,8 @@ class RuleEngine:
     def evaluateRules(self, temperature, humidity):
         print("Evaluating Rules")
         for rule in self.rules:
-            relaisController.switch(rule.relay, self.validateRule(rule, temperature, humidity))    
-            #relaisController.switch(rule.port, rule.validationFunction(temperature, humidity, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold))
+            relaisController.switch(rule.relay, self.validateRule(rule, temperature, humidity))        
+        #relaisController.switch(rule.port, rule.validationFunction(temperature, humidity, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold))
 
 def controlHydratingHeater(validation, port):
     relaisController.switch(port, validation)
