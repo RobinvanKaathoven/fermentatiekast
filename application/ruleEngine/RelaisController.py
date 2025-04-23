@@ -53,7 +53,7 @@ class RelaisController:
             elif(status == 1):
                 RPi.GPIO.output(port, True)          
         except NameError as error:
-            print("RPi.GPIO not found, Beep Boop Switch!")
+            print(f"RPi.GPIO not found, Beep Boop {port} to {status}!")
 
     def turnOn(self, port):
         try:

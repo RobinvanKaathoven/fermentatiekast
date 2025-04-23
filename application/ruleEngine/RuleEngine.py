@@ -15,10 +15,6 @@ relaisController.setPorts(ports)
 class RuleEngine:
     def __init__(self):
         self.rules = []
-        # self.addRule(Rule("hydrate", "humidity", "low", 5, 0))
-        # self.addRule(Rule("dehydrate", "humidity", "high", 5, 1))
-        # self.addRule(Rule("heat", "temperature", "low", 2, 2))
-        # self.addRule(Rule("cool", "temperature", "high", 2, 3))
 
     temperatureThreshold = 3
     targetTemperature = 15
@@ -57,21 +53,23 @@ class RuleEngine:
     def addRule(self, rule):
         self.rules.append(rule)
     def removeRule(self, rule):
-        self.rules.remove(rule)
+        for i, o in enumerate(self.rules):
+            if o.name == rule.name:
+                del self.rules[i]
+                break
     
     def validateRule(self, rule, temperature, humidity):
         if rule.type == "humidity" :
-            if rule.variant == "Too Low":
+            if rule.variant == "low":
                 return hydrateValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
-            elif rule.variant == "Too High":
+            elif rule.variant == "high":
                 return dehydrateValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
         elif rule.type == "temperature":
-            return heatingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
-        elif rule.type == "cooling":
-            return coolingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+            if rule.variant == "low":
+                return heatingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
+            elif rule.variant == "high":
+                return coolingValidation(temperature, humidity, self.targetTemperature, self.targetHumidity, rule.threshold)
         elif rule.type == "time":
-            #value =  timeValidation(rule.duration, rule.interval)
-            #print(f"Time validation: {value}")
             return timeValidation(rule.duration, rule.interval)
         else:
             return statusChange.NONE
@@ -80,7 +78,6 @@ class RuleEngine:
         print("Evaluating Rules")
         for rule in self.rules:
             relaisController.switch(rule.relay, self.validateRule(rule, temperature, humidity))        
-        #relaisController.switch(rule.port, rule.validationFunction(temperature, humidity, self.targetTemperature, self.targetHumidity, self.temperatureThreshold, self.humidityThreshold))
 
 def controlHydratingHeater(validation, port):
     relaisController.switch(port, validation)
@@ -94,8 +91,6 @@ def controlLampHeater(validation, port):
 def controlFridge(validation, port):
     relaisController.switch(port, validation)
     
-
-
 def hydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
     if humidity < targetHumidity - threshold:
         return statusChange.ON
@@ -146,9 +141,9 @@ def timeValidation(duration, interval):
     time_in_cycle = current_time % interval_sec
 
     if time_in_cycle < duration_sec:
-        return StatusChange.ON
+        return statusChange.ON
     else:
-        return StatusChange.OFF
+        return statusChange.OFF
 
 ruleEngine = RuleEngine()
 

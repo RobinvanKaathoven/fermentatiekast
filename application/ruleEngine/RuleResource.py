@@ -55,6 +55,7 @@ class RulesResource(Resource):
     def post(self):
         args = rule_args.parse_args()
         rule = Rule(name=args['name'], type=args['type'], variant=args['variant'], relay=args['relay'], temperature=args['temperature'], duration=args['duration'], interval=args['interval'], threshold=args['threshold'])
+        ruleEngine.addRule(rule)
         db.session.add(rule)
         db.session.commit()
         return rule, 201
@@ -83,7 +84,7 @@ class RuleResource(Resource):
         rule.threshold = args['threshold']
         db.session.commit()
 
-        ruleEngine.addRule(Rule(rule.name, rule.type, rule.variant, rule.relay, rule.temperature, rule.duration, rule.interval, rule.threshold))
+        ruleEngine.addRule(rule)
         return rule
     
     @marshal_with(ruleFields)
@@ -93,6 +94,5 @@ class RuleResource(Resource):
             abort(404, message="Rule not found")
         db.session.delete(rule)
         db.session.commit()
-
-        ruleEngine.removeRule(Rule(rule.name, rule.type, rule.variant, rule.relay, rule.temperature, rule.duration, rule.interval, rule.threshold))
+        ruleEngine.removeRule(rule)
         return rule
