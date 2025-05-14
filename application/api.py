@@ -131,7 +131,7 @@ def metrics():
 
 @app.route("/api/current")
 def current():
-    data = temperatureSensor.readJson()
+    data = temperatureSensor.read()
     return json.dumps(data)
 
 
