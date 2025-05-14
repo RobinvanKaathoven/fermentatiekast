@@ -75,6 +75,9 @@ class RuleEngine:
             return statusChange.NONE
 
     def evaluateRules(self, temperature, humidity):
+        if temperature is None or humidity is None:
+            print("Temperature or humidity is None, skipping rule evaluation")
+            return
         print("Evaluating Rules")
         for rule in self.rules:
             relaisController.switch(rule.relay, self.validateRule(rule, temperature, humidity))        
