@@ -17,6 +17,8 @@ from fermentation.FermentationResource import *
 from ruleEngine.RelayResource import *
 from ruleEngine.RuleResource import *
 
+from ruleEngine.BaseSettingsResource import *
+
 import json
 
 DEBUG_MODE = True
@@ -36,13 +38,16 @@ api.add_resource(RelaysResource, '/api/relays/')
 api.add_resource(RulesResource, '/api/rules/')
 api.add_resource(RuleResource, '/api/rule/<int:rule_id>')
 
-
 sensor_args = reqparse.RequestParser()
 sensor_args.add_argument('temperature', type=float, help='Temperature of the mock sensor', required=True)
 sensor_args.add_argument('humidity', type=int, help='Humidity of the mock sensor', required=True)
+sensor_args.add_argument('temperature_threshold', type=float, help='Temperature threshold of the mock sensor', required=True)
+sensor_args.add_argument('humidity_threshold', type=int, help='Humidity threshold of the mock sensor', required=True)
 sensorFields = {
     'temperature': fields.Float,
-    'humidity': fields.Integer
+    'humidity': fields.Integer,
+    'temperature_threshold': fields.Float,
+    'humidity_threshold': fields.Integer
 }
 
 testRelais_args = reqparse.RequestParser()
@@ -83,13 +88,18 @@ if DEBUG_MODE:
 class TargetResource(Resource):
     @marshal_with(sensorFields)
     def get(self):
-        return {'temperature': ruleEngine.getTargetTemperature(), 'humidity': ruleEngine.getTargetHumidity()}
+        return {'temperature': ruleEngine.getTargetTemperature(), 'humidity': ruleEngine.getTargetHumidity(), 'temperature_threshold': ruleEngine.getTemperatureThreshold(), 'humidity_threshold': ruleEngine.getHumidityThreshold()}
 
     @marshal_with(sensorFields)
     def post(self):
         args = sensor_args.parse_args()
-        ruleEngine.setTargetTemperature(args['temperature'])
-        ruleEngine.setTargetHumidity(args['humidity'])
+        #ruleEngine.setTargetTemperature(args['temperature'])
+        #ruleEngine.setTargetHumidity(args['humidity'])
+        BaseSettingsResource().put("Target_Temperature", args['temperature'])
+        BaseSettingsResource().put("Target_Humidity", args['humidity'])
+        BaseSettingsResource().put("Temperature_Threshold", args['temperature_threshold'])
+        BaseSettingsResource().put("Humidity_Threshold", args['humidity_threshold'])
+        BaseSettingsResource().updateRuleEngineSettings()
         return {'temperature': ruleEngine.getTargetTemperature(), 'humidity': ruleEngine.getTargetHumidity()}
 api.add_resource(TargetResource, '/api/target/')
 
@@ -125,7 +135,8 @@ def metrics():
         metrics.append(Metric("relay", relay.status, {"name": relay.name, "type": relay, "port" : relay.port}))
     metrics.append(Metric("target_temperature", ruleEngine.getTargetTemperature()))
     metrics.append(Metric("target_humidity", ruleEngine.getTargetHumidity()))
-        
+    metrics.append(Metric("temperature_threshold", ruleEngine.getTemperatureThreshold()))
+    metrics.append(Metric("humidity_threshold", ruleEngine.getHumidityThreshold()))    
     result = [metric.to_prometheus() for metric in metrics]
     return "\n".join(result), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
@@ -150,24 +161,49 @@ app.register_blueprint(swaggerBlueprint, url_prefix=swaggerUrl)
 counter = 0
 def ruleEvaluation():
     while True:
-        global counter
-        counter += 1
+        #global counter
+        #counter += 1
         values = temperatureSensor.read()
         
         ruleEngine.evaluateRules(values['temperature'], values['humidity'])
         time.sleep(10)
         
 if __name__ == '__main__':
+    ruleEvaluationThread = Thread(target=ruleEvaluation)
+    
     with app.app_context():
         relays = Relay.query.all()
         relaisController.setPorts([relay.port for relay in relays])
         rules = Rule.query.all()
         for rule in rules:
             ruleEngine.addRule(rule)
+        base_setting = BaseSettings.query.filter_by(name="Target_Temperature").first()
+        if base_setting is not None:
+            ruleEngine.setTargetTemperature(float(base_setting.value))
+        else:
+            print("No target temperature set, using default")
 
-        # Start the rule evaluation thread
-        ruleEvaluationThread = Thread(target=ruleEvaluation)
-        ruleEvaluationThread.start()
+        base_setting = BaseSettings.query.filter_by(name="Target_Humidity").first()
+        if base_setting is not None:
+            ruleEngine.setTargetHumidity(float(base_setting.value))
+        else:
+            print("No target humidity set, using default")
+
+        base_setting = BaseSettings.query.filter_by(name="Temperature_Threshold").first()
+        if base_setting is not None:
+            ruleEngine.setTemperatureThreshold(float(base_setting.value))
+        else:
+            print("No temperature threshold set, using default")
+        
+        base_setting = BaseSettings.query.filter_by(name="Humidity_Threshold").first()
+        if base_setting is not None:
+            ruleEngine.setHumidityThreshold(float(base_setting.value))
+        else:
+            print("No humidity threshold set, using default")
+        
+
+    # Start the rule evaluation thread
+    ruleEvaluationThread.start()
     
     app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
 

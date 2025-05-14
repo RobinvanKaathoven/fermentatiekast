@@ -19,6 +19,12 @@
         <label for="humidity">Target Humidity (%):</label>
         <input type="number" id="humidity" required>
 
+        <label for="temperature_threshold">Temperature Threshold (°C):</label>
+        <input type="number" id="temperature_threshold" required>
+
+        <label for="humidity_threshold">Humidity Threshold (%):</label>
+        <input type="number" id="humidity_threshold" required>
+
         <button type="submit">Set</button>
         <span id="alert"></span>
     </form>
@@ -27,8 +33,13 @@
     <h3>Current Values</h3>
     <p>Current Temperature: <span id="currentTemperature">N/A</span> °C</p>
     <p>Current Humidity: <span id="currentHumidity">N/A</span> %</p>
+    
+    <h3>Target Values</h3>
     <p>Target Temperature: <span id="targetTemperature">N/A</span> °C</p>
     <p>Target Humidity: <span id="targetHumidity">N/A</span> %</p>
+    <p>Target Temperature Threshold: <span id="targetTemperatureThreshold">N/A</span> °C</p>
+    <p>Target Humidity Threshold: <span id="targetHumidityThreshold">N/A</span> %</p>
+
 
     <h2>Manage Fermentations</h2>
     <form id="fermentationForm">
@@ -91,6 +102,8 @@
                 .then(data => {
                     document.getElementById('targetTemperature').innerText = data.temperature;
                     document.getElementById('targetHumidity').innerText = data.humidity;
+                    document.getElementById('targetTemperatureThreshold').innerText = data.temperature_threshold;
+                    document.getElementById('targetHumidityThreshold').innerText = data.humidity_threshold;
                 })
                 .catch(error => console.error('Error fetching current values:', error));
         }
@@ -98,13 +111,15 @@
             event.preventDefault();
             const temperature = document.getElementById('temperature').value;
             const humidity = document.getElementById('humidity').value;
+            const temperature_threshold = document.getElementById('temperature_threshold').value;
+            const humidity_threshold = document.getElementById('humidity_threshold').value;
 
             fetch('/api/target', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ temperature: temperature, humidity: humidity }),
+                body: JSON.stringify({ temperature: temperature, humidity: humidity, temperature_threshold: temperature_threshold, humidity_threshold: humidity_threshold }),
             })
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');

@@ -30,7 +30,6 @@ class RelaisController:
             RPi.GPIO.cleanup()
             RPi.GPIO.setmode(RPi.GPIO.BCM)
             for i in self.ports:
-                print(i)
                 RPi.GPIO.setup(i, RPi.GPIO.OUT)
                 RPi.GPIO.output(i, False)                  
         except NameError as error:

@@ -16,10 +16,10 @@ class RuleEngine:
     def __init__(self):
         self.rules = []
 
-    temperatureThreshold = 3
-    targetTemperature = 15
-    humidityThreshold = 10
-    targetHumidity = 50
+    temperatureThreshold = None
+    targetTemperature = None
+    humidityThreshold = None
+    targetHumidity = None
 
     def testOn(self, number):
         relaisController.turnOn(number)
@@ -75,8 +75,9 @@ class RuleEngine:
             return statusChange.NONE
 
     def evaluateRules(self, temperature, humidity):
-        if temperature is None or humidity is None:
-            print("Temperature or humidity is None, skipping rule evaluation")
+        if temperature is None or humidity is None or self.targetTemperature is None or self.targetHumidity is None or self.temperatureThreshold is None or self.humidityThreshold is None:
+            # If any of the values are None, skip the rule evaluation
+            print("Targets, Temperature or humidity is None, skipping rule evaluation")
             return
         print("Evaluating Rules")
         for rule in self.rules:
