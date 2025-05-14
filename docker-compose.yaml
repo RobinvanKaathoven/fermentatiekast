@@ -5,6 +5,7 @@ services:
     restart: always
     devices:
       - "/dev/mem:/dev/mem"
+      - "/dev/gpiomem:/dev/gpiomem"
     privileged: true
     ports:
       - 5000:5000
