@@ -182,10 +182,16 @@ def refreshSensorData():
             relaisController.addRelais(26)
         time.sleep(50)
 
+def updateTemperatureHumidity():
+    while True:
+        values = temperatureSensor.update()
+        print(f"Temperature: {values['temperature']} Humidity: {values['humidity']}")
+        time.sleep(30)
 
 if __name__ == '__main__':
     ruleEvaluationThread = Thread(target=ruleEvaluation)
     refreshSensorDataThread = Thread(target=refreshSensorData)
+    updateTemperatureHumidityThread = Thread(target=updateTemperatureHumidity)
 
     with app.app_context():
         relays = Relay.query.all()
@@ -223,6 +229,7 @@ if __name__ == '__main__':
     # Start the rule evaluation thread
     ruleEvaluationThread.start()
     refreshSensorDataThread.start()
-    
+    updateTemperatureHumidityThread.start()
+
     app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
 

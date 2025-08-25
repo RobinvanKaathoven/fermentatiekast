@@ -19,12 +19,10 @@ class TemperatureSensor:
             self.temperature = 20
             self.humidity = 50
             self.dht_device = None
-            
-    def read(self):
+    def update(self):
         if self.dht_device is not None:
             try:
-                self.temperature = self.dht_device.temperature
-                self.humidity = self.dht_device.humidity
+                self.temperature, self.humidity = self.dht_device.read_retry()
             except RuntimeError as error:
                 #Happens. Screw DHTs
                 1+1
@@ -33,15 +31,20 @@ class TemperatureSensor:
                 "humidity": self.humidity
             }
         else:
+            self.temperature = random.uniform(15.0, 25.0)
+            self.humidity = random.uniform(30.0, 70.0)
             return {
                 "temperature": self.temperature,
                 "humidity": self.humidity
-            }  
+            }   
+             
+    def read(self):
+        return {
+            "temperature": self.temperature,
+            "humidity": self.humidity
+        }  
           
     def readJson(self):
-        if self.dht_device is not None:
-            self.temperature = self.dht_device.temperature
-            self.humidity = self.dht_device.humidity
         return {
             "temperature": self.temperature,
             "humidity": self.humidity
