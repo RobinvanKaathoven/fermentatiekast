@@ -164,7 +164,6 @@ def ruleEvaluation():
         #global counter
         #counter += 1
         values = temperatureSensor.read()
-        
         ruleEngine.evaluateRules(values['temperature'], values['humidity'])
         time.sleep(10)
 
@@ -172,11 +171,16 @@ def refreshSensorData():
     while True:
         #global counter
         #counter += 1
-        relaisController.turnOff(27)
-        time.sleep(2)
-        relaisController.turnOn(27)
-        time.sleep(10)
-
+        print("Trying to turn on 26")
+        try:
+            relaisController.turnOff(26)
+            time.sleep(2)
+            relaisController.turnOn(26)
+            print(" yes ")
+        except Exception as e:
+            print(f"Error {e}")
+            relaisController.addRelais(26)
+        time.sleep(50)
 
 
 if __name__ == '__main__':
@@ -185,7 +189,9 @@ if __name__ == '__main__':
 
     with app.app_context():
         relays = Relay.query.all()
-        relaisController.setPorts([relay.port for relay in relays])
+        relayPorts = [relay.port for relay in relays]
+        relayPorts.append(26)
+        relaisController.setPorts(relayPorts)
         rules = Rule.query.all()
         for rule in rules:
             ruleEngine.addRule(rule)

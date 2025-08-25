@@ -11,7 +11,9 @@ class RelaisController:
             for i in self.ports:
                 print(i)
                 RPi.GPIO.setup(i, RPi.GPIO.OUT)
-                RPi.GPIO.output(i, False)                  
+                RPi.GPIO.output(i, False)
+            #RPi.GPIO.setup(26, RPi.GPIO.OUT)
+            #RPi.GPIO.output(26, False)                  
         except NameError as error:
             print("RPi.GPIO not found, using mock GPIO")
     def addRelais(self, port):
@@ -31,7 +33,8 @@ class RelaisController:
             RPi.GPIO.setmode(RPi.GPIO.BCM)
             for i in self.ports:
                 RPi.GPIO.setup(i, RPi.GPIO.OUT)
-                RPi.GPIO.output(i, False)                  
+                RPi.GPIO.output(i, False)
+                print(f"Port {i} setup")
         except NameError as error:
             print("RPi.GPIO not found, SETTING PORTS LIKE A BOOSSSSS")
 
