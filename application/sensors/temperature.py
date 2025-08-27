@@ -21,17 +21,16 @@ class TemperatureSensor:
             self.dht_device = None
     def update(self):
         if self.dht_device is not None:
-            try:
-                
+            try:              
                 n=0
-                _temperature, _humidity = None, None
-                while _temperature is not None and _humidity is not None and n<10:
-                    _temperature, _humidity = self.dht_device.read_retry()
-                    self.temperature = _temperature
-                    self.humidity = _humidity
+                _temperature, _humidity = 0, 0
+                while _temperature is 0 and _humidity is 0 and n<10:
+                    _temperature, _humidity = self.dht_device.temperature, self.dht_device.humidity
                     n += 1
                     time.sleep(1)
-
+                if _temperature is not 0 or _humidity is not 0:
+                    self.temperature = _temperature
+                    self.humidity = _humidity
 
             except RuntimeError as error:
                 #Happens. Screw DHTs
