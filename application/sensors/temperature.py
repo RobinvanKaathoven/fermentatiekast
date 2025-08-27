@@ -22,7 +22,7 @@ class TemperatureSensor:
     def update(self):
         if self.dht_device is not None:
             try:
-                _temperature, _humidity = self.dht_device.read_retry()
+                _temperature, _humidity = adafruit_dht.read_retry(adafruit_dht.DHT22, board.D4)
                 if _temperature is not None:
                     self.temperature = _temperature
                 if _humidity is not None:
