@@ -176,7 +176,6 @@ def refreshSensorData():
             relaisController.turnOff(26)
             time.sleep(2)
             relaisController.turnOn(26)
-            print(" yes ")
         except Exception as e:
             print(f"Error {e}")
             relaisController.addRelais(26)
