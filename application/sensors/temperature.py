@@ -22,12 +22,7 @@ class TemperatureSensor:
     def update(self):
         if self.dht_device is not None:
             try:              
-                n=0
-                _temperature, _humidity = 0, 0
-                while _temperature == 0 and _humidity == 0 and n<10:
-                    _temperature, _humidity = self.dht_device.temperature, self.dht_device.humidity
-                    n += 1
-                    time.sleep(1)
+                _temperature, _humidity = self.dht_device.read_retry()
                 if _temperature != 0 or _humidity != 0:
                     self.temperature = _temperature
                     self.humidity = _humidity
