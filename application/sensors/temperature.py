@@ -24,11 +24,11 @@ class TemperatureSensor:
             try:              
                 n=0
                 _temperature, _humidity = 0, 0
-                while _temperature is 0 and _humidity is 0 and n<10:
+                while _temperature == 0 and _humidity == 0 and n<10:
                     _temperature, _humidity = self.dht_device.temperature, self.dht_device.humidity
                     n += 1
                     time.sleep(1)
-                if _temperature is not 0 or _humidity is not 0:
+                if _temperature != 0 or _humidity != 0:
                     self.temperature = _temperature
                     self.humidity = _humidity
 
