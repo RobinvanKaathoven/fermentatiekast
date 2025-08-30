@@ -165,7 +165,7 @@ def ruleEvaluation():
         #counter += 1
         values = temperatureSensor.read()
         ruleEngine.evaluateRules(values['temperature'], values['humidity'])
-        time.sleep(10)
+        time.sleep(5)
 
 def refreshSensorData():
     while True:
@@ -185,7 +185,7 @@ def updateTemperatureHumidity():
     while True:
         values = temperatureSensor.update()
         print(f"Temperature: {values['temperature']} Humidity: {values['humidity']}")
-        time.sleep(30)
+        time.sleep(5)
 
 if __name__ == '__main__':
     ruleEvaluationThread = Thread(target=ruleEvaluation)
