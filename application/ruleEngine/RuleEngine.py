@@ -98,28 +98,28 @@ def controlFridge(validation, port):
 def hydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
     if humidity < targetHumidity - threshold:
         return statusChange.ON
-    elif humidity > targetHumidity:
+    elif humidity > targetHumidity - 0.75*threshold:
         return statusChange.OFF
     return statusChange.NONE
 
 def dehydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
     if humidity > targetHumidity + threshold:
         return statusChange.ON
-    elif humidity < targetHumidity:
+    elif humidity < targetHumidity + 0.75*threshold:
         return statusChange.OFF
     return statusChange.NONE
 
 def heatingValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
     if temperature < targetTemperature - threshold:
         return statusChange.ON
-    elif temperature > targetTemperature:
+    elif temperature > targetTemperature - 0.75*threshold:
         return statusChange.OFF
     return statusChange.NONE
 
 def coolingValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):    
     if temperature > targetTemperature + threshold:
         return statusChange.ON
-    elif temperature < targetTemperature:
+    elif temperature < targetTemperature + 0.75*threshold:
         return statusChange.OFF
     return statusChange.NONE
 
