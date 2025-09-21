@@ -75,10 +75,15 @@ class RuleEngine:
             return statusChange.NONE
 
     def evaluateRules(self, temperature, humidity):
-        if temperature is None or humidity is None or self.targetTemperature is None or self.targetHumidity is None or self.temperatureThreshold is None or self.humidityThreshold is None:
+        if temperature is None or humidity is None:
             # If any of the values are None, skip the rule evaluation
-            print("Targets, Temperature or humidity is None, skipping rule evaluation")
+            print("Temperature or humidity is None, skipping rule evaluation")
             return
+        if self.targetTemperature is None or self.targetHumidity is None or self.temperatureThreshold is None or self.humidityThreshold is None:
+            # If any of the values are None, skip the rule evaluation
+            print("No Targets set, skipping rule evaluation")
+            return
+        
         print("Evaluating Rules")
         for rule in self.rules:
             relaisController.switch(rule.relay, self.validateRule(rule, temperature, humidity))        
@@ -98,14 +103,14 @@ def controlFridge(validation, port):
 def hydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
     if humidity < targetHumidity - threshold:
         return statusChange.ON
-    elif humidity > targetHumidity - 0.75*threshold:
+    elif humidity > targetHumidity:
         return statusChange.OFF
     return statusChange.NONE
 
 def dehydrateValidation(temperature, humidity, targetTemperature, targetHumidity, threshold):
     if humidity > targetHumidity + threshold:
         return statusChange.ON
-    elif humidity < targetHumidity + 0.75*threshold:
+    elif humidity < targetHumidity:
         return statusChange.OFF
     return statusChange.NONE
 

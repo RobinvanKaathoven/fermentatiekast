@@ -42,7 +42,7 @@ class RelaisController:
         try:
             return RPi.GPIO.input(port)
         except NameError as error:
-            print("RPi.GPIO not found, Beep Boop Port Status!")
+            print(f"{port} RPi.GPIO not found, Beep Boop Port Status!")
             return random.choice([True, False])
     
     def getPorts(self):
@@ -61,12 +61,12 @@ class RelaisController:
         try:
             RPi.GPIO.output(port, True)        
         except NameError as error:
-            print("RPi.GPIO not found, Beep Boop ON!")
+            print(f"RPi.GPIO not found, Beep Boop {port} to ON!")
         
 
     def turnOff(self, port):
         try:
             RPi.GPIO.output(port, False)  
         except NameError as error:
-            print("RPi.GPIO not found, Beep Boop OFF!")
+            print(f"RPi.GPIO not found, Beep Boop {port} to OFF!")
 relaisController = RelaisController([])

@@ -10,7 +10,10 @@ from util.metric import Metric
 
 from ruleEngine.RuleEngine import ruleEngine
 from sensors.temperature import TemperatureSensor
+import threading
 from threading import Thread
+
+
 
 from ruleEngine.Rule import Rule
 from fermentation.FermentationResource import *
@@ -69,8 +72,23 @@ class TestRelaisResource(Resource):
         else:
             ruleEngine.testOff(number)
         return {'number': number, 'status': status}
+    
+class RuleTestResource(Resource):
+    def post(self):
+        args = sensor_args.parse_args()
+        temperature = args['temperature']
+        humidity = args['humidity']
+        results = []
+        for rule in ruleEngine.rules: 
+            result = ruleEngine.validateRule(rule, temperature, humidity)
+            print(f"Rule {rule.name} validation result: {result}")
+            results.append({"name": rule.name, "statusChange": result})
+        
+        return results
+    
 if DEBUG_MODE:
     api.add_resource(TestRelaisResource, '/api/testrelais/')
+    api.add_resource(RuleTestResource, '/api/testrules/')
 
 class MockResource(Resource):
     @marshal_with(sensorFields)
@@ -122,6 +140,11 @@ def rules():
 def climate():
     message = "Hello, World"
     return render_template('climate.html', message=message)
+
+@app.route('/ruletester')
+def ruletester():
+    message = "Hello, World"
+    return render_template('ruletester.html', message=message)
 
 @app.route("/metrics")
 def metrics():
@@ -184,13 +207,13 @@ def refreshSensorData():
 def updateTemperatureHumidity():
     while True:
         values = temperatureSensor.update()
-        print(f"Temperature: {values['temperature']} Humidity: {values['humidity']}")
+        print(f"T{threading.get_native_id()}:{threading.current_thread().name} Temperature: {values['temperature']} Humidity: {values['humidity']}")
         time.sleep(5)
 
 if __name__ == '__main__':
-    ruleEvaluationThread = Thread(target=ruleEvaluation)
-    refreshSensorDataThread = Thread(target=refreshSensorData)
-    updateTemperatureHumidityThread = Thread(target=updateTemperatureHumidity)
+    ruleEvaluationThread = Thread(target=ruleEvaluation, name="RuleEvaluationThread")
+    refreshSensorDataThread = Thread(target=refreshSensorData, name="RefreshSensorDataThread")
+    updateTemperatureHumidityThread = Thread(target=updateTemperatureHumidity, name="UpdateTemperatureHumidityThread")
 
     with app.app_context():
         relays = Relay.query.all()
@@ -230,5 +253,5 @@ if __name__ == '__main__':
     refreshSensorDataThread.start()
     updateTemperatureHumidityThread.start()
 
-    app.run(host='0.0.0.0', debug=True) # This will start the Flask web server in debug
+    app.run(host='0.0.0.0') # This will start the Flask web server in debug
 
